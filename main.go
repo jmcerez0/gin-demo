@@ -27,7 +27,7 @@ func main() {
 
 	r.POST("/signin", handlers.SignIn)
 
-	r.GET("/users", middlewares.ValidateToken, handlers.GetAllUsers)
+	r.GET("/users", middlewares.RequireAuth, handlers.GetAllUsers)
 
 	r.Run()
 }

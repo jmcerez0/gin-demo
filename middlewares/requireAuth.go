@@ -11,7 +11,7 @@ import (
 	"github.com/jmcerez0/gin-demo/utils"
 )
 
-func ValidateToken(c *gin.Context) {
+func RequireAuth(c *gin.Context) {
 	tokenString, err := c.Cookie("token")
 
 	if err != nil {
