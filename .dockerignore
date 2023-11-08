@@ -1,0 +1,8 @@
+gin-demo*
+
+.git
+.gitignore
+
+.dockerignore
+docker-compose.yml
+Dockerfile
