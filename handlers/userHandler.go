@@ -17,10 +17,10 @@ var err error
 
 func SignUp(c *gin.Context) {
 	var body struct {
-		FirstName string
-		LastName  string
-		Email     string
-		Password  string
+		FirstName string `form:"first_name" json:"first_name" xml:"first_name"  binding:"required"`
+		LastName  string `form:"last_name" json:"last_name" xml:"last_name"  binding:"required"`
+		Email     string `form:"email" json:"email" xml:"email"  binding:"required,email"`
+		Password  string `form:"password" json:"password" xml:"password"  binding:"required,min=8"`
 	}
 
 	err = c.Bind(&body)
@@ -73,8 +73,8 @@ func SignUp(c *gin.Context) {
 
 func SignIn(c *gin.Context) {
 	var body struct {
-		Email    string
-		Password string
+		Email    string `form:"email" json:"email" xml:"email"  binding:"required,email"`
+		Password string `form:"password" json:"password" xml:"password"  binding:"required"`
 	}
 
 	err = c.Bind(&body)
