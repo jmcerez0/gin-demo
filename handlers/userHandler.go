@@ -2,18 +2,12 @@ package handlers
 
 import (
 	"net/http"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/jmcerez0/gin-demo/models"
 	"github.com/jmcerez0/gin-demo/utils"
-	"golang.org/x/crypto/bcrypt"
 )
-
-var err error
 
 func SignUp(c *gin.Context) {
 	var body struct {
@@ -23,9 +17,7 @@ func SignUp(c *gin.Context) {
 		Password  string `form:"password" json:"password" xml:"password"  binding:"required,min=8"`
 	}
 
-	err = c.Bind(&body)
-
-	if err != nil {
+	if err := c.Bind(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
@@ -33,7 +25,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	hashedPassword, err := utils.HashPassword(body.Password)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -47,7 +39,7 @@ func SignUp(c *gin.Context) {
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
-		Password:  string(hash),
+		Password:  hashedPassword,
 	}
 
 	result := utils.DB.Create(&user)
@@ -77,9 +69,7 @@ func SignIn(c *gin.Context) {
 		Password string `form:"password" json:"password" xml:"password"  binding:"required"`
 	}
 
-	err = c.Bind(&body)
-
-	if err != nil {
+	if err := c.Bind(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
@@ -98,9 +88,7 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-
-	if err != nil {
+	if err := utils.ComparePassword(user.Password, body.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Incorrect email or password.",
 		})
@@ -108,14 +96,7 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":  user.ID,
-		"name": user.FirstName + " " + user.LastName,
-		"iat":  time.Now().Unix(),
-		"exp":  time.Now().Add(time.Hour * 24 * 3).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	token, err := utils.GetToken(user)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -126,10 +107,10 @@ func SignIn(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("token", tokenString, 3600*24*3, "", "", false, true)
+	c.SetCookie("token", token, 3600*24*3, "", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": tokenString,
+		"token": token,
 	})
 }
 
