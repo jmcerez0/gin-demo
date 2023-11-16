@@ -99,7 +99,7 @@ func SignIn(c *gin.Context) {
 	token, err := utils.GetToken(user)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": err.Error(),
 		})
 
